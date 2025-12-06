@@ -33,17 +33,27 @@ export async function POST(request: NextRequest) {
     console.log('[Payment API] ✅ Pagamento criado:', mpPayment.paymentId);
 
     // Salvar pagamento no banco para validação posterior
-    const { error: dbError } = await supabaseAdmin
+    console.log('[Payment API] Tentando salvar no banco:', {
+      email: email.toLowerCase().trim(),
+      payment_id: mpPayment.paymentId,
+      status: 'pending',
+    });
+
+    const { data: insertedData, error: dbError } = await supabaseAdmin
       .from('payments')
       .insert({
         email: email.toLowerCase().trim(),
         payment_id: mpPayment.paymentId,
         status: 'pending',
-      });
+      })
+      .select();
 
     if (dbError) {
-      console.error('[Payment API] Erro ao salvar no banco:', dbError);
+      console.error('[Payment API] ❌ ERRO ao salvar no banco:', dbError);
+      console.error('[Payment API] Detalhes do erro:', JSON.stringify(dbError, null, 2));
       // Não retorna erro pro cliente, pagamento já foi criado no MercadoPago
+    } else {
+      console.log('[Payment API] ✅ Salvo no banco com sucesso:', insertedData);
     }
 
     return NextResponse.json({
