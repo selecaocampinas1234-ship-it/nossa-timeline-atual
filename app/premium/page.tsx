@@ -1,15 +1,12 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2, Upload, CheckCircle2 } from 'lucide-react';
 
-function PremiumContent() {
+export default function PremiumPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const emailFromUrl = searchParams.get('email') || '';
-
-  const [email, setEmail] = useState(emailFromUrl);
+  const [email, setEmail] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -225,17 +222,5 @@ function PremiumContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function PremiumPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-      </div>
-    }>
-      <PremiumContent />
-    </Suspense>
   );
 }
