@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
     const person2Name = formData.get('person2Name') as string;
     const person1Photo = formData.get('person1Photo') as File | null;
     const person2Photo = formData.get('person2Photo') as File | null;
+    const isPremium = formData.get('isPremium') === 'true';
+    const email = formData.get('email') as string | null;
 
     // Validações
     if (!file) {
@@ -108,13 +110,22 @@ export async function POST(request: NextRequest) {
       .map(m => `[${m.timestamp.toLocaleString()}] ${m.sender}: ${m.content}`)
       .join('\n');
 
-    const { analyzeFiveCards } = await import('@/lib/gemini-service');
-    const cardsAnalysis = await analyzeFiveCards(
-      messageSample,
-      person1Name,
-      person2Name,
-      relationType === 'casal' || relationType === 'amizade' ? relationType : 'casal'
-    );
+    const { analyzeFiveCards, analyzeFullTimeline } = await import('@/lib/gemini-service');
+    
+    // Se premium, gerar 20-25 cards; senão, gerar 5 cards
+    const cardsAnalysis = isPremium
+      ? await analyzeFullTimeline(
+          messageSample,
+          person1Name,
+          person2Name,
+          relationType === 'casal' || relationType === 'amizade' ? relationType : 'casal'
+        )
+      : await analyzeFiveCards(
+          messageSample,
+          person1Name,
+          person2Name,
+          relationType === 'casal' || relationType === 'amizade' ? relationType : 'casal'
+        );
 
     // Gerar ID único para esta preview
     const previewId = `preview-${Date.now()}-${Math.random().toString(36).substring(7)}`;

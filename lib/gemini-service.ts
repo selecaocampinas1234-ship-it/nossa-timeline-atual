@@ -238,6 +238,74 @@ Retorne no formato:
 }
 
 /**
+ * Analisa os 20-25 cards principais da história (VERSÃO PREMIUM)
+ */
+export async function analyzeFullTimeline(
+  messages: string,
+  person1: string,
+  person2: string,
+  relationType: 'casal' | 'amizade'
+): Promise<any> {
+  const prompt = `
+Você é um especialista em análise de conversas do WhatsApp. Analise a conversa abaixo e crie uma timeline COMPLETA com 20-25 momentos marcantes.
+
+**PESSOAS:**
+- ${person1}
+- ${person2}
+
+**TIPO DE RELAÇÃO:** ${relationType === 'casal' ? 'Namoro/Relacionamento Romântico' : 'Amizade'}
+
+**CONVERSA:**
+${messages}
+
+**TAREFA:**
+Crie uma timeline com 20-25 momentos especiais que contam a história completa dessa relação. Para cada momento:
+
+1. **title**: Nome do momento (criativo e emocional)
+2. **emoji**: Emoji que representa o momento
+3. **category**: Tipo do momento (positive, negative, neutral, funny, romantic, etc)
+4. **description**: Descrição envolvente (2-3 frases)
+5. **snippet**: Trecho real da conversa que exemplifica
+6. **date**: Data aproximada (formato: "DD MÊS AAAA")
+
+**IMPORTANTE:**
+- Conte a história cronologicamente
+- Misture momentos positivos, negativos, engraçados e românticos
+- Use linguagem emocional e envolvente
+- Priorize momentos com carga emocional forte
+- Inclua pequenas vitórias e grandes conquistas
+- Mostre a evolução da relação
+
+Retorne APENAS JSON válido no formato:
+{
+  "cards": [
+    {
+      "id": "1",
+      "title": "Como Tudo Começou",
+      "winner": "${person1}",
+      "stat": "primeiro contato",
+      "statLabel": "15 JAN 2024",
+      "confidence": 100,
+      "icon": "✨"
+    }
+  ],
+  "moments": [
+    {
+      "title": "O Primeiro Oi",
+      "emoji": "💫",
+      "category": "positive",
+      "description": "O momento em que tudo começou...",
+      "snippet": "Oi! Tudo bem?",
+      "date": "15 JAN 2024"
+    }
+  ]
+}
+`;
+
+  return analyzeWithGemini(prompt);
+}
+
+/**
  * Gera timeline de momentos marcantes usando Gemini
  */
 export async function generateTimelineWithGemini(
