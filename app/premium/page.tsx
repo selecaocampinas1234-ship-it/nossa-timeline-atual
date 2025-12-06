@@ -113,7 +113,15 @@ export default function PremiumPage() {
           throw new Error('Dados dos cards não encontrados');
         }
       } else {
-  // Se está mostrando resultados, redirecionar para visualização completa
+        throw new Error('Resposta inválida do servidor');
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao processar arquivo');
+      setIsProcessing(false);
+    }
+  };
+
+  // Se está mostrando resultados, exibir página de resultados
   if (showResults && resultCards && resultMoments) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12 px-4">
@@ -177,14 +185,6 @@ export default function PremiumPage() {
       </div>
     );
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-      alert(error instanceof Error ? error.message : 'Erro ao processar arquivo');
-      setIsProcessing(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12 px-4">
