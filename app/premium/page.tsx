@@ -4,6 +4,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Upload, CheckCircle2 } from 'lucide-react';
 
+interface Card {
+  id: string;
+  title: string;
+  winner: string;
+  stat: string;
+  statLabel: string;
+  confidence: number;
+}
+
+interface Moment {
+  title: string;
+  emoji: string;
+  category: string;
+  description: string;
+  snippet: string;
+  date: string;
+}
+
 export default function PremiumPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -12,6 +30,9 @@ export default function PremiumPage() {
   const [validationError, setValidationError] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [resultCards, setResultCards] = useState<Card[] | null>(null);
+  const [resultMoments, setResultMoments] = useState<Moment[] | null>(null);
 
   const validateEmail = async () => {
     if (!email) {
@@ -81,12 +102,85 @@ export default function PremiumPage() {
         throw new Error(data.error || 'Erro ao processar');
       }
 
-      if (data.success && data.previewId) {
-        router.push(`/h/${data.previewId}`);
+      if (data.success && data.data) {
+        // Exibir resultados na própria página (igual página criar)
+        if (data.data.cards) {
+          setResultCards(data.data.cards);
+          setResultMoments(data.data.moments || []);
+          setShowResults(true);
+          setIsProcessing(false);
+        } else {
+          throw new Error('Dados dos cards não encontrados');
+        }
       } else {
-        throw new Error('Erro ao gerar timeline');
-      }
-    } catch (error) {
+  // Se está mostrando resultados, redirecionar para visualização completa
+  if (showResults && resultCards && resultMoments) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              ✨ Sua Timeline Premium
+            </h1>
+            <p className="text-gray-600">
+              {resultMoments.length} momentos especiais foram gerados!
+            </p>
+          </div>
+
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {resultCards.map((card) => (
+              <div key={card.id} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">{card.title}</h3>
+                <div className="text-3xl font-bold text-purple-600 mb-2">{card.stat}</div>
+                <div className="text-sm text-gray-600 mb-4">Vencedor: {card.winner}</div>
+                <div className="text-xs text-gray-500">Confiança: {card.confidence}%</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Timeline de Momentos */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-2xl font-bold mb-6 text-center">📅 Linha do Tempo Completa</h2>
+            <div className="space-y-6">
+              {resultMoments.map((moment, index) => (
+                <div key={index} className="border-l-4 border-purple-500 pl-6 py-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl">{moment.emoji}</span>
+                    <h3 className="text-xl font-bold text-gray-800">{moment.title}</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-2">{moment.date}</p>
+                  <p className="text-gray-700 mb-2">{moment.description}</p>
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 italic">
+                    "{moment.snippet}"
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Botão voltar */}
+          <div className="text-center mt-8">
+            <button
+              onClick={() => {
+                setShowResults(false);
+                setResultCards(null);
+                setResultMoments(null);
+                setFile(null);
+              }}
+              className="text-purple-600 hover:text-purple-700 font-medium"
+            >
+              ← Criar Nova Timeline
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 py-12 px-4">
+      <div className="max-w-2xl mx-auto">
       alert(error instanceof Error ? error.message : 'Erro ao processar arquivo');
       setIsProcessing(false);
     }
