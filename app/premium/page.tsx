@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 
+// Força renderização dinâmica para evitar erro de pre-render
+export const dynamic = 'force-dynamic';
+
 export default function PremiumPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
