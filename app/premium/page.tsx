@@ -63,12 +63,12 @@ export default function PremiumPage() {
     try {
       // Preparar FormData (igual página gratuita)
       const formDataToSend = new FormData();
-      formDataToSend.append('file', file);
-      formDataToSend.append('relationType', 'casal'); // Default para premium
-      formDataToSend.append('person1Name', 'Pessoa 1'); // Placeholder
-      formDataToSend.append('person2Name', 'Pessoa 2'); // Placeholder
-      formDataToSend.append('isPremium', 'true'); // Flag premium
-      formDataToSend.append('email', email); // Email validado
+      if (file) formDataToSend.append('file', file);
+      formDataToSend.append('relationType', 'casal');
+      formDataToSend.append('person1Name', 'Pessoa 1');
+      formDataToSend.append('person2Name', 'Pessoa 2');
+      formDataToSend.append('isPremium', 'true');
+      formDataToSend.append('email', email);
       
       const response = await fetch('/api/generate', {
         method: 'POST',
