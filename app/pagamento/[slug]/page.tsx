@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+
+// Força renderização dinâmica
+export const dynamic = 'force-dynamic';
 import { Copy, CheckCircle2, Loader2, QrCode, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+
+// Força renderização dinâmica
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { 
   Share2, 

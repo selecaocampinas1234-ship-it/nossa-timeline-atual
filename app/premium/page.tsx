@@ -1,13 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 
-// Força renderização dinâmica para evitar erro de pre-render
-export const dynamic = 'force-dynamic';
-
-export default function PremiumPage() {
+function PremiumContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailFromUrl = searchParams.get('email') || '';
@@ -228,5 +225,17 @@ export default function PremiumPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PremiumPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    }>
+      <PremiumContent />
+    </Suspense>
   );
 }
