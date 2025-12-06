@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const { analyzeFiveCards, analyzeFullTimeline } = await import('@/lib/gemini-service');
     
-    // Se premium, gerar timeline completa (15-20 momentos); senão, gerar 5 cards + 4 momentos
+    // Se premium, gerar 20-25 cards; senão, gerar 5 cards
     const cardsAnalysis = isPremium
       ? await analyzeFullTimeline(
           messageSample,
@@ -131,6 +131,10 @@ export async function POST(request: NextRequest) {
           relationType === 'casal' || relationType === 'amizade' ? relationType : 'casal'
         );
 
+    console.log('[API Generate] Gemini retornou:', JSON.stringify(cardsAnalysis).substring(0, 500));
+    console.log('[API Generate] Cards encontrados:', cardsAnalysis.cards?.length || 0);
+    console.log('[API Generate] Momentos encontrados:', cardsAnalysis.moments?.length || 0);
+
     // Gerar ID único para esta preview
     const previewId = `preview-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     
@@ -142,7 +146,6 @@ export async function POST(request: NextRequest) {
       person2Name,
       totalMessages,
       conversationText: fileContent,
-      // Se premium, cards vazio (só timeline); se grátis, 5 cards
       cards: cardsAnalysis.cards ? cardsAnalysis.cards.map((card: any) => ({
         id: card.id,
         title: card.title,
@@ -161,7 +164,8 @@ export async function POST(request: NextRequest) {
     storiesInMemory.set(previewId, previewData);
     
     console.log('[API Generate] ✅ Preview criada:', previewId);
-    console.log('[API Generate] Cards gerados:', previewData.cards.length);
+    console.log('[API Generate] Cards salvos:', previewData.cards.length);
+    console.log('[API Generate] Momentos salvos:', previewData.moments.length);
     
     // Retornar dados completos diretamente (não precisa de GET)
     return NextResponse.json({
