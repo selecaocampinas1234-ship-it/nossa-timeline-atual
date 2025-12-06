@@ -31,8 +31,18 @@ if (!globalForStories.storiesInMemory) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse FormData
-    const formData = await request.formData();
+    // Parse FormData (força o tipo correto)
+    const contentType = request.headers.get('content-type') || '';
+    
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: 'Erro ao processar FormData. Verifique se o arquivo foi enviado corretamente.' },
+        { status: 400 }
+      );
+    }
     
     const file = formData.get('file') as File | null;
     const relationType = formData.get('relationType') as RelationType;
