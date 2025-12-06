@@ -39,9 +39,27 @@ export async function analyzeWithGemini(prompt: string): Promise<GeminiAnalysisR
     const response = result.response;
     const text = response.text();
     
-    console.log('[Gemini] ✅ Resposta recebida:', text.substring(0, 200) + '...');
+    console.log('[Gemini] ✅ Resposta recebida (primeiros 500 chars):', text.substring(0, 500));
     
-    return JSON.parse(text);
+    // Tentar limpar JSON antes de parsear
+    let cleanedText = text.trim();
+    
+    // Remover markdown code blocks se existirem
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/```\n?/g, '');
+    }
+    
+    cleanedText = cleanedText.trim();
+    
+    try {
+      return JSON.parse(cleanedText);
+    } catch (parseError) {
+      console.error('[Gemini] Erro ao parsear JSON:', parseError);
+      console.error('[Gemini] JSON problemático:', cleanedText);
+      throw new Error('Gemini retornou JSON inválido. Tente novamente.');
+    }
   } catch (error) {
     console.error('[Gemini] Erro na análise:', error);
     throw error;
@@ -247,7 +265,7 @@ export async function analyzeFullTimeline(
   relationType: 'casal' | 'amizade'
 ): Promise<any> {
   const prompt = `
-Você é um especialista em análise de conversas do WhatsApp. Analise a conversa abaixo e crie uma timeline COMPLETA com 20-25 momentos marcantes.
+Você é um especialista em análise de conversas do WhatsApp. Analise a conversa abaixo e crie uma TIMELINE COMPLETA com 15-20 momentos marcantes.
 
 **PESSOAS:**
 - ${person1}
@@ -259,47 +277,81 @@ Você é um especialista em análise de conversas do WhatsApp. Analise a convers
 ${messages}
 
 **TAREFA:**
-Crie uma timeline com 20-25 momentos especiais que contam a história completa dessa relação. Para cada momento:
+Encontre 15-20 MOMENTOS MARCANTES da conversa que contam a história dessa relação.
 
-1. **title**: Nome do momento (criativo e emocional)
-2. **emoji**: Emoji que representa o momento
-3. **category**: Tipo do momento (positive, negative, neutral, funny, romantic, etc)
-4. **description**: Descrição envolvente (2-3 frases)
-5. **snippet**: Trecho real da conversa que exemplifica
-6. **date**: Data aproximada (formato: "DD MÊS AAAA")
+${relationType === 'casal' ? `
+**PARA CASAIS, FOQUE EM:**
+- Momentos românticos ou declarações de amor
+- Pequenas brigas ou ciúmes (tom leve)
+- Surpresas ou presentes mencionados
+- Planos de encontro ou viagens românticas
+- Apelidos carinhosos ou elogios
+- Conversas sobre o futuro juntos
+- Saudade ou "te amo" especiais
+- Conquistas compartilhadas como casal
+- Comemorações e datas especiais
+- Momentos engraçados ou divertidos
+` : `
+**PARA AMIGOS, FOQUE EM:**
+- Zoações ou brincadeiras engraçadas entre amigos
+- Planos de rolê, festa ou balada
+- Piadas internas ou memes compartilhados
+- Aventuras ou histórias engraçadas
+- Desabafos ou conselhos de amizade
+- Games, esportes ou hobbies em comum
+- Resenha ou conversas aleatórias divertidas
+- Combinações de encontro ou confraternizações
+`}
 
-**IMPORTANTE:**
-- Conte a história cronologicamente
-- Misture momentos positivos, negativos, engraçados e românticos
-- Use linguagem emocional e envolvente
-- Priorize momentos com carga emocional forte
-- Inclua pequenas vitórias e grandes conquistas
-- Mostre a evolução da relação
+**IMPORTANTE - EVITE:**
+- Conteúdo extremamente agressivo ou violento
+- Discussões muito sérias ou ofensivas
+- Assuntos muito íntimos ou sensíveis
+- Traições ou traumas graves
+- Conteúdo que possa constranger as pessoas
 
-Retorne APENAS JSON válido no formato:
+**IMPORTANTE - EXTRAÇÃO DE DATAS:**
+- Formato nas mensagens: [DD/MM/YYYY HH:MM] Nome: mensagem
+- Extraia a data REAL do timestamp da mensagem relacionada ao momento
+- Converta para formato: "DD MÊS AAAA" (mês abreviado em maiúsculas com 3 letras)
+- Exemplos: [15/01/2024] → "15 JAN 2024", [03/03/2023] → "03 MAR 2023"
+
+**PARA CADA MOMENTO:**
+- **title**: Título curto e impactante (3-6 palavras)
+- **emoji**: Emoji que representa o momento
+- **category**: ROMANCE, BRIGA, ENGRAÇADO, VIAGEM, SURPRESA, CONQUISTA, SAUDADE, etc
+- **description**: Breve contexto do que aconteceu (1-2 frases)
+- **snippet**: Trecho REAL da conversa (1-2 mensagens curtas)
+- **date**: Data extraída do timestamp (formato: "DD MÊS AAAA")
+
+Retorne APENAS JSON válido com 15-20 momentos:
 {
-  "cards": [
-    {
-      "id": "1",
-      "title": "Como Tudo Começou",
-      "winner": "${person1}",
-      "stat": "primeiro contato",
-      "statLabel": "15 JAN 2024",
-      "confidence": 100,
-      "icon": "✨"
-    }
-  ],
   "moments": [
     {
       "title": "O Primeiro Oi",
       "emoji": "💫",
-      "category": "positive",
-      "description": "O momento em que tudo começou...",
-      "snippet": "Oi! Tudo bem?",
+      "category": "ROMANCE",
+      "description": "O momento em que tudo começou, uma conversa simples que mudaria tudo.",
+      "snippet": "${person1}: Oi! Tudo bem?",
       "date": "15 JAN 2024"
+    },
+    {
+      "title": "Primeira Briga",
+      "emoji": "😤",
+      "category": "BRIGA",
+      "description": "A primeira discussão séria do casal sobre um mal-entendido.",
+      "snippet": "${person2}: Você não me entende!",
+      "date": "20 JAN 2024"
     }
   ]
 }
+
+**REGRAS FINAIS:**
+- MÍNIMO 15 momentos, MÁXIMO 20 momentos
+- Escolha momentos INTRIGANTES mas LEVES
+- Use trechos REAIS da conversa
+- Extraia datas REAIS dos timestamps
+- Conte a história de forma cronológica
 `;
 
   return analyzeWithGemini(prompt);

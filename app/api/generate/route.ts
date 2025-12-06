@@ -31,18 +31,12 @@ if (!globalForStories.storiesInMemory) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse FormData (força o tipo correto)
-    const contentType = request.headers.get('content-type') || '';
+    // Log headers para debug
+    console.log('[API Generate] Content-Type:', request.headers.get('content-type'));
+    console.log('[API Generate] Headers:', Object.fromEntries(request.headers.entries()));
     
-    let formData: FormData;
-    try {
-      formData = await request.formData();
-    } catch (error) {
-      return NextResponse.json(
-        { success: false, error: 'Erro ao processar FormData. Verifique se o arquivo foi enviado corretamente.' },
-        { status: 400 }
-      );
-    }
+    // Parse FormData
+    const formData = await request.formData();
     
     const file = formData.get('file') as File | null;
     const relationType = formData.get('relationType') as RelationType;
@@ -122,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     const { analyzeFiveCards, analyzeFullTimeline } = await import('@/lib/gemini-service');
     
-    // Se premium, gerar 20-25 cards; senão, gerar 5 cards
+    // Se premium, gerar timeline completa (15-20 momentos); senão, gerar 5 cards + 4 momentos
     const cardsAnalysis = isPremium
       ? await analyzeFullTimeline(
           messageSample,
@@ -148,7 +142,8 @@ export async function POST(request: NextRequest) {
       person2Name,
       totalMessages,
       conversationText: fileContent,
-      cards: cardsAnalysis.cards.map((card: any) => ({
+      // Se premium, cards vazio (só timeline); se grátis, 5 cards
+      cards: cardsAnalysis.cards ? cardsAnalysis.cards.map((card: any) => ({
         id: card.id,
         title: card.title,
         winner: card.winner,
@@ -156,7 +151,7 @@ export async function POST(request: NextRequest) {
         statLabel: card.statLabel || '',
         confidence: card.confidence || 0,
         icon: card.icon || '🎯'
-      })),
+      })) : [],
       moments: cardsAnalysis.moments || [],
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString() // Expira em 10 min
